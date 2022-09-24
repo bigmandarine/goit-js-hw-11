@@ -17,32 +17,25 @@ let numberOfPage = 1;
 
 refs.buttonSubmit.addEventListener('click', onBtnClick);
 
-async function onBtnClick(evt) {
+function onBtnClick(evt) {
+  numberOfPage = 1;
+  clearGalleryData();
   evt.preventDefault();
-
-  try {
-    if (refs.searchQuery.value === '') {
-      Notiflix.Notify.failure(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
-    } else {
-      clearGalleryData();
-      const images = await fetchchImages(refs.searchQuery.value, numberOfPage);
-      const renderAllImages = await renderImages(images.hits);
-      gallerySimpleLightbox.refresh();
-
+  if (refs.searchQuery.value !== '') {
+    fetchchImages(refs.searchQuery.value, numberOfPage).then(images => {
       if (images.hits.length === 0) {
-        refs.buttonLoadMore.classList.add('is-hidden');
         Notiflix.Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
         );
       } else {
+        renderImages(images.hits);
+        numberOfPage >= Math.round(images.totalHits / 40)
+          ? refs.buttonLoadMore.classList.add('is-hidden')
+          : refs.buttonLoadMore.classList.remove('is-hidden');
         Notiflix.Notify.success(`Hooray! We found ${images.totalHits} images.`);
-        refs.buttonLoadMore.classList.remove('is-hidden');
+        gallerySimpleLightbox.refresh();
       }
-    }
-  } catch (error) {
-    console.log(error);
+    });
   }
 }
 
